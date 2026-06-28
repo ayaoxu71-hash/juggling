@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react"
 import { supabase } from "./supabase"
 
+// ===== 廣告圖片清單 =====
+const AD_IMAGES = [
+  "/ad-banner.png",
+  "/ad-2.JPG",
+  "/ad-3.JPG",
+]
+
 // ===== 廣告位元件 =====
 const AdBanner = () => (
   <div className="w-full overflow-hidden">
@@ -12,8 +19,31 @@ const AdBanner = () => (
   </div>
 )
 
+// ===== 彈窗廣告元件 =====
+const AdModal = ({ onClose }) => {
+  const randomImage = AD_IMAGES[Math.floor(Math.random() * AD_IMAGES.length)]
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center px-4">
+      <div className="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-xl">
+        <button
+          onClick={onClose}
+          className="absolute top-3 left-3 z-10 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold"
+        >
+          ✕
+        </button>
+        <img
+          src={randomImage}
+          alt="廣告"
+          className="w-full object-cover"
+        />
+      </div>
+    </div>
+  )
+}
+
 // ===== 課程卡片元件 =====
-const CourseCard = ({ course }) => (
+const CourseCard = ({ course, onVideoPlayed }) => (
   <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
     <div className="w-full aspect-video">
       {course.video_url ? (
@@ -23,6 +53,7 @@ const CourseCard = ({ course }) => (
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="w-full h-full"
+          onFocus={onVideoPlayed}
         />
       ) : (
         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -48,10 +79,23 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("profile")
   const [jugglingCourses, setJugglingCourses] = useState([])
   const [physioCourses, setPhysioCourses] = useState([])
+  const [showAd, setShowAd] = useState(false)
+  const [videoClickCount, setVideoClickCount] = useState(0)
+  const [adTriggerCount] = useState(() => Math.floor(Math.random() * 3) + 2)
 
   useEffect(() => {
     fetchCourses()
   }, [])
+
+  useEffect(() => {
+    if (videoClickCount > 0 && videoClickCount % adTriggerCount === 0) {
+      setShowAd(true)
+    }
+  }, [videoClickCount])
+
+  const handleVideoPlayed = () => {
+    setVideoClickCount(prev => prev + 1)
+  }
 
   const fetchCourses = async () => {
     const { data, error } = await supabase
@@ -132,6 +176,7 @@ export default function App() {
     setPage("auth")
     setIsLogin(true)
     setActiveTab("profile")
+    setVideoClickCount(0)
   }
 
   const switchTab = (tab) => {
@@ -181,7 +226,7 @@ export default function App() {
       <h2 className="text-lg font-bold text-gray-800 mb-4">雜耍訓練課程</h2>
       {jugglingCourses.length > 0 ? (
         jugglingCourses.map(course => (
-          <CourseCard key={course.id} course={course} />
+          <CourseCard key={course.id} course={course} onVideoPlayed={handleVideoPlayed} />
         ))
       ) : (
         <div className="bg-white rounded-2xl shadow-sm p-5">
@@ -197,7 +242,7 @@ export default function App() {
       <h2 className="text-lg font-bold text-gray-800 mb-4">物理治療課程</h2>
       {physioCourses.length > 0 ? (
         physioCourses.map(course => (
-          <CourseCard key={course.id} course={course} />
+          <CourseCard key={course.id} course={course} onVideoPlayed={handleVideoPlayed} />
         ))
       ) : (
         <div className="bg-white rounded-2xl shadow-sm p-5">
@@ -211,6 +256,7 @@ export default function App() {
   if (page === "home") {
     return (
       <div className="min-h-screen bg-gray-100 pb-24">
+        {showAd && <AdModal onClose={() => setShowAd(false)} />}
         <nav className="bg-white shadow-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-base font-bold text-gray-800">Juggling</h1>
           <button onClick={handleLogout} className="text-sm text-red-500">
