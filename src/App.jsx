@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react"
 import { supabase } from "./supabase"
 
-// ===== 廣告圖片清單 =====
+// ===== 彈窗廣告圖片清單（不包含 ad-banner.png）=====
 const AD_IMAGES = [
-  "/ad-banner.png",
   "/ad-2.JPG",
   "/ad-3.JPG",
 ]
 
-// ===== 廣告位元件 =====
+// ===== 廣告位元件（只在登入頁頂部顯示）=====
 const AdBanner = () => (
   <div className="w-full overflow-hidden">
     <img
@@ -21,7 +20,6 @@ const AdBanner = () => (
 
 // ===== 彈窗廣告元件 =====
 const AdModal = ({ onClose }) => {
-  // 每次彈出都隨機選一張圖片
   const [randomImage] = useState(
     () => AD_IMAGES[Math.floor(Math.random() * AD_IMAGES.length)]
   )
@@ -29,7 +27,6 @@ const AdModal = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center px-4">
       <div className="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-xl">
-        {/* 關閉按鈕：左上角 */}
         <button
           onClick={onClose}
           className="absolute top-3 left-3 z-10 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold"
@@ -85,14 +82,12 @@ export default function App() {
   const [physioCourses, setPhysioCourses] = useState([])
   const [showAd, setShowAd] = useState(false)
   const [videoClickCount, setVideoClickCount] = useState(0)
-  // 隨機決定看幾支影片後彈出廣告（2到4之間）
   const [adTriggerCount] = useState(() => Math.floor(Math.random() * 3) + 2)
 
   useEffect(() => {
     fetchCourses()
   }, [])
 
-  // 每次 videoClickCount 更新時，檢查是否要彈出廣告
   useEffect(() => {
     if (videoClickCount > 0 && videoClickCount % adTriggerCount === 0) {
       setShowAd(true)
@@ -264,9 +259,7 @@ export default function App() {
   if (page === "home") {
     return (
       <div className="min-h-screen bg-gray-100 pb-24">
-        {/* 彈窗廣告 */}
         {showAd && <AdModal onClose={() => setShowAd(false)} />}
-
         <nav className="bg-white shadow-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-base font-bold text-gray-800">Juggling</h1>
           <button onClick={handleLogout} className="text-sm text-red-500">
