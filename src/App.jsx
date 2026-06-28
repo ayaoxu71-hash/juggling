@@ -212,7 +212,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gray-100 pb-24">
         <nav className="bg-white shadow-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-base font-bold text-gray-800">我的會員系統</h1>
+          <h1 className="text-base font-bold text-gray-800">Juggling</h1>
           <button onClick={handleLogout} className="text-sm text-red-500">
             登出
           </button>
