@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "./supabase"
 
-// ===== 彈窗廣告圖片清單（不包含 ad-banner.png）=====
+// ===== 彈窗廣告圖片清單 =====
 const AD_IMAGES = [
   "/ad-2.JPG",
   "/ad-3.JPG",
@@ -19,10 +19,17 @@ const AdBanner = () => (
 )
 
 // ===== 彈窗廣告元件 =====
-const AdModal = ({ onClose }) => {
-  const [randomImage] = useState(
-    () => AD_IMAGES[Math.floor(Math.random() * AD_IMAGES.length)]
-  )
+const AdModal = ({ onClose, lastAdImage, onAdShown }) => {
+  const [randomImage] = useState(() => {
+    // 過濾掉上次顯示的圖片，確保不連續出現同一張
+    const available = AD_IMAGES.filter(img => img !== lastAdImage)
+    // 如果只有一張圖片，就直接用那張
+    const pool = available.length > 0 ? available : AD_IMAGES
+    const selected = pool[Math.floor(Math.random() * pool.length)]
+    // 通知父元件這次顯示的是哪張
+    onAdShown(selected)
+    return selected
+  })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center px-4">
@@ -82,7 +89,9 @@ export default function App() {
   const [physioCourses, setPhysioCourses] = useState([])
   const [showAd, setShowAd] = useState(false)
   const [videoClickCount, setVideoClickCount] = useState(0)
-  const [adTriggerCount] = useState(() => Math.floor(Math.random() * 3) + 2)
+  const [adTriggerCount, setAdTriggerCount] = useState(() => Math.floor(Math.random() * 3) + 2)
+  // 記錄上次顯示的廣告圖片，避免連續出現同一張
+  const [lastAdImage, setLastAdImage] = useState(null)
 
   useEffect(() => {
     fetchCourses()
@@ -91,6 +100,8 @@ export default function App() {
   useEffect(() => {
     if (videoClickCount > 0 && videoClickCount % adTriggerCount === 0) {
       setShowAd(true)
+      // 關掉廣告後重新隨機下次觸發數量
+      setAdTriggerCount(Math.floor(Math.random() * 3) + 2)
     }
   }, [videoClickCount])
 
@@ -180,6 +191,7 @@ export default function App() {
     setIsLogin(true)
     setActiveTab("profile")
     setVideoClickCount(0)
+    setLastAdImage(null)
   }
 
   const switchTab = (tab) => {
@@ -259,7 +271,13 @@ export default function App() {
   if (page === "home") {
     return (
       <div className="min-h-screen bg-gray-100 pb-24">
-        {showAd && <AdModal onClose={() => setShowAd(false)} />}
+        {showAd && (
+          <AdModal
+            onClose={() => setShowAd(false)}
+            lastAdImage={lastAdImage}
+            onAdShown={(img) => setLastAdImage(img)}
+          />
+        )}
         <nav className="bg-white shadow-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10">
           <h1 className="text-base font-bold text-gray-800">Juggling</h1>
           <button onClick={handleLogout} className="text-sm text-red-500">
